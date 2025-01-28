@@ -47,7 +47,17 @@ default:
 fifo:
 	@echo "-- Verilator hello-world simple binary example"
 	@echo "-- VERILATE & BUILD --------"
-	$(VERILATOR) --binary -j 0 verilog/SyncFifo.sv verilog/SyncFifo_tb.sv
+	$(VERILATOR) --binary -j 0 verilog/fifos/SyncFifo.sv verilog/fifos/SyncFifo_tb.sv
+	@echo "-- RUN ---------------------"
+	obj_dir/VSyncFifo
+	@echo "-- DONE --------------------"
+
+######################################################################
+
+fifoOpt:
+	@echo "-- Verilator hello-world simple binary example"
+	@echo "-- VERILATE & BUILD --------"
+	$(VERILATOR) --binary -j 0 verilog/fifos/SyncFifoOptimized.sv verilog/fifos/SyncFifoOptimized_tb.sv
 	@echo "-- RUN ---------------------"
 	obj_dir/VSyncFifo
 	@echo "-- DONE --------------------"
