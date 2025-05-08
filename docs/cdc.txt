@@ -1,0 +1,22 @@
+1) One flip-flop Synchronizer
+    - Impractical and not useful
+
+2) Dual flip-flop Synchronizer
+    - Used for SINGLE bit synchronization. Can't be used on multi-bit channels
+    - If the frequency is high, assuming your mean time between failure (MTBF) is large, you can use 3 flip flops
+    - Used for control bits. Remember, you must set a max delay constraint on CDC or you can get outrageous routes in SPAR
+
+3) Toggle based Synchronizer
+    - A 2-FF sync can't synchronize a toggling system from fast -> slow because slow will lose the toggle.
+    - Above can be solved therefore with a pulse based synchronizer
+    - This can capture a toggling signal.
+
+4) Pulse based synchronizer
+    - A pulse sync takes a pulse from domain A to domain B
+    - Warning: A pulse sync must have a guaranteed pulse break between pulses or the output will be 2 concatenated pulses which is just 1
+    - You can solve this with a pulse sync which creates a "busy" signal which guarantees the warning above is satisfied
+
+5) Mux Synchronizer
+    - A Mux sync is used to synchronize data with the control signal
+    - The data comes into a mux which is controlled by a 2FF sync'd (or toggle sync) to enable the data to pass through the output flop
+    - This allows the data to come into the new domain only when the control signal is toggled

@@ -32,15 +32,8 @@ export VERILATOR_ROOT
 VERILATOR = $(VERILATOR_ROOT)/bin/verilator
 endif
 
-default:
-	@echo "-- Verilator hello-world simple binary example"
-	@echo "-- VERILATE & BUILD --------"
-	$(VERILATOR) --binary -j 0 top.v
-	@echo "-- RUN ---------------------"
-	obj_dir/Vtop
-	@echo "-- DONE --------------------"
-	@echo "Note: Once this example is understood, see examples/make_hello_c."
-	@echo "Note: See also https://verilator.org/guide/latest/examples.html"
+list:
+	@grep '^[^#[:space:]].*:' Makefile
 
 ######################################################################
 

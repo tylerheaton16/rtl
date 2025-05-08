@@ -1,0 +1,61 @@
+SimpleRouter
+   Can use Mux with assign statements to determine outputs (basic)
+
+SecondLargest
+    Remember that if,elseif,else go in order. So, if else if doesn't happen you check the next case
+
+RoundingDivision
+    When you need to do any type of division, always think about bit shifting
+        -Multiplication = bit shift left
+        -Division = bit shift right
+            Big Note: You can use the remainder that is bit shifted out of division to decide if you need to round up or round down using an overflow bit
+            Note: $clog2 is log2 with a ceiling function
+
+GrayCodeCounter
+    Gray code calculation is easy. It is gray[MSB] = binary[MSB], then gray[i] = binary[i+1] ^ binary[i]
+        Big Note: Know how to convert from binary to graycode
+        Even Better: gray = bin ^ (binary >> 1)
+
+    Binary to Gray is...
+    g[3] = b[3]
+    g[2] = b[3] ^ b[2]
+    g[1] = b[2] ^ b[1]
+    g[0] = b[1] ^ b[0]
+
+    Gray to Binary is...
+    b[3] = g[3]
+    b[2] = b[3] ^ g[2]
+    b[1] = b[2] ^ g[1]
+    b[0] = b[1] ^ g[0]
+
+EdgeDetector
+    When you use state machines, you can use the state to drive wires.
+        Note: When we are in the one to zero transition state, we can say that DOUT should be high in this example
+        because this state indicates we went from ZZ to ZO. Use states to drive signals in state machines. You do this in chisel!
+
+
+DivideBy5
+    When you want to look at if a value is divisible by a value, you can look at what bit is seen
+    If 0, then MOD0, if 01 then MOD1 if 10 then MOD2 if 11 then MOD3 if 101 MOD0
+    We can use a statemachine to check this without ever specifying the size of a signal
+
+CountingOnes
+    Recall: you can do always@(*) for combinational logic.
+        then you can assign a reg value in that as well.
+        reg temp;
+        always@(*) begin
+          temp = 0;
+        end
+
+Configurable8BitLFSR
+    A LFSR is not complicated.
+    t = ^ (lfsr & tap_ff) is the trick to solving this
+    A tap_ff is a "mask" signal. By anding it with the value of a register, you pulled out all values that are 1.
+
+PriorityArbiter
+    The takeaway here is how you do bit manipulation to "mask" bits AGAIN - very common takeaway
+    if we do sig1 | sig2 | sig 2 - this just checks is ANY of those bits 1?
+        then, if any ARE 1, we can do ~result to make it 0. - this is our "mask bit"
+        we then take what we want to mask and do value & mask to 0 it out
+        so if request = 101010011 and the LSB has priority, gnt will look like 000000001
+

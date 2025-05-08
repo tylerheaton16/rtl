@@ -1,9 +1,12 @@
-module SyncFifoOptimized (
-    clk, reset,
-    wen,ren,
+module AsyncFifo (
+    clk,
+    reset,
+    wen,
+    ren,
     din,
     dout,
-    full, empty
+    full,
+    empty
 );
 
   parameter int DEPTH = 8;
