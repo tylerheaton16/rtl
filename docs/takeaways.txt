@@ -14,7 +14,7 @@ RoundingDivision
 GrayCodeCounter
     Gray code calculation is easy. It is gray[MSB] = binary[MSB], then gray[i] = binary[i+1] ^ binary[i]
         Big Note: Know how to convert from binary to graycode
-        Even Better: gray = bin ^ (binary >> 1)
+        Even Better: gray = bin ^ (bin >> 1)
 
     Binary to Gray is...
     g[3] = b[3]

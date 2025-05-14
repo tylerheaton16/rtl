@@ -24,7 +24,7 @@ module GrayCodeCounter #(
   end
   assign out = gray;
 
-  // this is how to convert gray code to binary
+ // this is how to convert gray code to binary
  // always @(*) begin
  //  bin[DATA_WIDTH-1] = gray[DATA_WIDTH-1];
  //  for (int i = DATA_WIDTH - 2; i >= 0; i = i - 1) begin

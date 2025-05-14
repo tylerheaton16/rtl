@@ -41,7 +41,7 @@ module PriorityArbiterDecPrio #(
     assign gnt[N-i] = req[N-i] & ~(|req[N-1:N-i]);
   end
 
-  //NOTE: The commong way to create a priority arbiter
+  //NOTE: The common way to create a priority arbiter
   //Say N = 8
   //logic [N-1:0] higher_pri_req;
   //assign higher_pri_req[0] = 1'b0;  //LSB has the highest priority

@@ -1,4 +1,7 @@
-module AsyncFifo (
+module AsyncFifo #(
+    parameter W = 8,
+    parameter DEPTH = 8
+) (
     clk,
     reset,
     wen,
@@ -9,57 +12,62 @@ module AsyncFifo (
     empty
 );
 
-  parameter int DEPTH = 8;
-  parameter int WIDTH = 64;
-  localparam MSB_PTR = $clog2(DEPTH);
+  localparam W2 = $clog2(W);  // W=8 then W2=3
+  wire [ W2:0] rdPtr;
+  wire [ W2:0] wtPtr;
+  reg  [W-1:0] fifo  [DEPTH];
 
-  input clk, reset, wen, ren;
-  input [WIDTH-1:0] din;
-  output full, empty;
-  output logic [WIDTH-1:0] dout;
+  wire isMsbOne = rdPtr[W2] ^ wtPtr[W2];
+  assign empty = rdPtr == wtPtr;
+  assign full = isMsbOne && (rdPtr[W2-1:0] == wtPtr[W2-1:0]);
 
-  logic [MSB_PTR:0] wtPtr, rdPtr;  // clog(8) = 3 [3:0]
-  logic [WIDTH-1 : 0] fifo[DEPTH];
-  logic isMsbOne;
+  //g2b g2b_inst (
+  //    .gray(gray),
+  //    .bin (binary)
+  //);
 
-  /*
-    NOTE: don't do `-1` because we want to increase the size of wt/rdPtr
-    in order to calculate empty/full without losing a memory location
-  */
-
-  //Empty = when MSB of wtPtr and rdPtr are equal AND wtPtr == rdPtr for lower 3 bits
-  assign empty = wtPtr == rdPtr;
-  //Full = when MSB of wtPtr and rdPtr differ AND wtPtr == rdPtr for lower 3 bits
-  assign full = isMsbOne && (wtPtr[MSB_PTR-1:0] == rdPtr[MSB_PTR-1:0]);
-  //If isMsbOne == 1, then wtPtr and rdPtr = 1
-  assign isMsbOne = wtPtr[MSB_PTR] ^ rdPtr[MSB_PTR];
+endmodule
 
 
+//2FF synchronizer we can use to sync bits
+module Synchronizer (
+    input clk,
+    input resetn,
+    input in,
+    output reg out
 
-
-  /*Reset condition - active low reset*/
+);
+  reg q1;
   always @(posedge clk) begin
-    if (!reset) begin
-      dout  <= 0;
-      wtPtr <= 0;
-      rdPtr <= 0;
+    if (~resetn) begin
+      out <= 0;
+      q1  <= 0;
+    end else begin
+      q1  <= in;
+      out <= q1;
     end
   end
+endmodule
 
-  /*Write Operation - Can write indefinitely until we are "full"*/
-  always @(posedge clk) begin
-    if (!full && wen) begin
-      wtPtr <= wtPtr + 1'b1;
-      fifo[wtPtr[MSB_PTR-1:0]] <= din;
-    end
+module b2g #(
+    parameter WIDTH = 8
+) (
+    input  wire [WIDTH-1:0] bin,
+    output wire [WIDTH-1:0] gray
+);
+
+  assign gray = bin ^ (bin >> 1);
+endmodule
+
+module g2b #(
+    parameter WIDTH = 8
+) (
+    input  wire [WIDTH-1:0] gray,
+    output wire [WIDTH-1:0] bin
+
+);
+  assign bin[WIDTH-1] = gray[WIDTH-1];
+  for (genvar i = 0; i < WIDTH - 1; i++) begin
+    assign bin[i] = bin[i+1] ^ gray[i];
   end
-
-  /*Read Operation - Can read indefinitely until we are "empty"*/
-  always @(posedge clk) begin
-    if (!empty && ren) begin
-      rdPtr <= rdPtr + 1'b1;
-      dout  <= fifo[rdPtr[MSB_PTR-1:0]];
-    end
-  end
-
 endmodule

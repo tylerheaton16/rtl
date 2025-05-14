@@ -43,7 +43,7 @@ module DivideBy5 (
     end else begin
       case(state)
         RE: state <= din ? MOD1 : MOD0;
-        MOD0: state <= din ? MOD1 : MOD0
+        MOD0: state <= din ? MOD1 : MOD0;
         MOD1: state <= din ? MOD3 : MOD2;
         MOD2: state <= din ? MOD0 : MOD4;
         MOD3: state <= din ? MOD1 : MOD1;
