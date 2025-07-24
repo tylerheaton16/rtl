@@ -1,0 +1,10 @@
+[project]
+name = "coco-tb"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cocotb==2.0.0b1",
+    "pytest>=8.4.1",
+]

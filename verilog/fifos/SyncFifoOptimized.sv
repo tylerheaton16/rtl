@@ -1,13 +1,16 @@
 module SyncFifoOptimized (
-    clk, reset,
-    wen,ren,
+    clk,
+    reset,
+    wen,
+    ren,
     din,
     dout,
-    full, empty
+    full,
+    empty
 );
 
   parameter int DEPTH = 8;
-  parameter int WIDTH = 64;
+  parameter int WIDTH = 16;
   localparam MSB_PTR = $clog2(DEPTH);
 
   input clk, reset, wen, ren;
