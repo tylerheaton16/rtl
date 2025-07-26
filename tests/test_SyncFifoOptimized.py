@@ -103,11 +103,10 @@ async def syncfifo_basic_test(dut):
         width= int(dut.WIDTH),
         depth= int(dut.DEPTH)
     )
-    reset = dut.reset
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(fifo.clk, 10, unit="ns").start())
 
     #wait for reset to complete
-    reset_thread = cocotb.start_soon(reset_design(reset, duration_ns=500))
+    reset_thread = cocotb.start_soon(reset_design(fifo.reset, duration_ns=500))
     await reset_thread
     cocotb.log.debug("After Reset")
 
