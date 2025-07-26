@@ -12,6 +12,21 @@ from cocotb_tools.runner import get_runner
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from collections import deque
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass
+class FifoInterface:
+    clk: Any
+    reset: Any
+    wen: Any
+    ren: Any
+    din: Any
+    dout: Any
+    full: Any
+    empty: Any
+    width: int
+    depth: int
 
 cocotb.log.setLevel(logging.DEBUG)
 queue = deque(maxlen=16)   # Create an empty deque
@@ -23,46 +38,47 @@ async def reset_design(reset, duration_ns):
     reset.value = 1
     cocotb.log.debug("Reset Complete")
 
-async def write_and_read(din, wen, ren, dout, width, period, clk, depth, full):
+async def write_and_read(fifo: FifoInterface):
     """Write to the fifo, then read from the fifo"""
 
-    await RisingEdge(clk)
+    await RisingEdge(fifo.clk)
 
+    # Hold values in a python variable
     wen_value = random.randint(0,1)
-    din_value = random.randint(0,(2**width)-1)
+    din_value = random.randint(0,(2**fifo.width)-1)
 
-    #assigning signals to values
-    wen.value = wen_value
-    din.value = din_value
+    # Assign held value to signals
+    fifo.wen.value = wen_value
+    fifo.din.value = din_value
 
-    #logging signals with values
+    # logging signals with values
     cocotb.log.debug("wen.value = %d" % wen_value)
     cocotb.log.debug("din.value = %d" % din_value)
 
-    if wen_value == 1 and not int(full):
+    if wen_value == 1 and not int(fifo.full):
         queue.append(din_value)
 
-    await RisingEdge(clk)
+    await RisingEdge(fifo.clk)
 
     # must assign wen.value to 0 1 cycle later
-    wen.value = 0
+    fifo.wen.value = 0
 
     ren_value = random.randint(0,1)
-    ren.value = ren_value
+    fifo.ren.value = ren_value
 
     cocotb.log.debug("ren.value = %d" % ren_value)
 
     #await 1 clock cycle and we will see valid data
-    await RisingEdge(clk)
-    ren.value = 0
+    await RisingEdge(fifo.clk)
+    fifo.ren.value = 0
 
-    if ren.value == 1 and queue:
+    if fifo.ren.value == 1 and queue:
         dout_check = queue.popleft()
-        await RisingEdge(clk)
-        cocotb.log.debug("dout.value = %d" % dout.value)
+        await RisingEdge(fifo.clk)
+        cocotb.log.debug("dout.value = %d" % fifo.dout.value)
         cocotb.log.debug("dout_check = %d" % dout_check)
-        assert int(dout.value) == dout_check, (
-         f"dout.value != dout_check: {int(dout.value)} != {dout_check}"
+        assert int(fifo.dout.value) == dout_check, (
+         f"dout.value != dout_check: {int(fifo.dout.value)} != {dout_check}"
             )
     elif queue:
         cocotb.log.info("Queue contains data - did not issue a read")
@@ -74,9 +90,21 @@ async def write_and_read(din, wen, ren, dout, width, period, clk, depth, full):
 @cocotb.test()
 async def syncfifo_basic_test(dut):
     """Test for filling fifo by 1, then dequeing"""
-    period = 10
+
+    fifo = FifoInterface(
+        clk= dut.clk,
+        reset= dut.reset,
+        wen= dut.wen,
+        ren= dut.ren,
+        din= dut.din,
+        dout= dut.dout,
+        full= dut.full,
+        empty= dut.empty,
+        width= int(dut.WIDTH),
+        depth= int(dut.DEPTH)
+    )
     reset = dut.reset
-    cocotb.start_soon(Clock(dut.clk, period, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     #wait for reset to complete
     reset_thread = cocotb.start_soon(reset_design(reset, duration_ns=500))
@@ -84,4 +112,4 @@ async def syncfifo_basic_test(dut):
     cocotb.log.debug("After Reset")
 
     for _ in range(1000):
-        await write_and_read(dut.din, dut.wen, dut.ren, dut.dout, int(dut.WIDTH.value), period, dut.clk, int(dut.DEPTH.value), dut.full)
+        await write_and_read(fifo)
