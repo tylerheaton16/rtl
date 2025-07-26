@@ -14,42 +14,61 @@ from cocotb.triggers import RisingEdge
 from collections import deque
 
 cocotb.log.setLevel(logging.DEBUG)
+queue = deque(maxlen=16)   # Create an empty deque
 
 async def reset_design(reset, duration_ns):
     """toggle reset"""
-    reset.value = 1
-    await Timer(duration_ns, unit="ns")
     reset.value = 0
+    await Timer(duration_ns, unit="ns")
+    reset.value = 1
     cocotb.log.debug("Reset Complete")
 
-async def write_and_read(din, wen, ren, dout, width, period, clk, depth):
+async def write_and_read(din, wen, ren, dout, width, period, clk, depth, full):
     """Write to the fifo, then read from the fifo"""
-    queue = deque(maxlen=depth)   # Create an empty deque
-
-
-    wen.value = random.randint(0,1)
-    din.value = random.randint(0,(2**width)-1)
-    cocotb.log.debug("wen.value is equal to: %d" % wen.value)
-    cocotb.log.debug("din.value is equal to: %d" % din.value)
-
-    #Makes sure a rising edge occurs to check the wen.value
-    await RisingEdge(clk)
-    if wen.value == 1:
-        queue.append(din.value)
-
 
     await RisingEdge(clk)
-    ren.value = random.randint(0,1)
-    cocotb.log.debug("ren.value is equal to: %d" % ren.value)
-    dout_check = queue.popleft() if ren.value == 1 and queue else 0# Dequeue (efficient O(1))
 
-    await Timer(period, "ns")
+    wen_value = random.randint(0,1)
+    din_value = random.randint(0,(2**width)-1)
 
-    if not queue:
-        cocotb.log.info("QUEUE is empty - ending test")
-        return
+    #assigning signals to values
+    wen.value = wen_value
+    din.value = din_value
 
-    assert dout.value == dout_check and queue
+    #logging signals with values
+    cocotb.log.debug("wen.value = %d" % wen_value)
+    cocotb.log.debug("din.value = %d" % din_value)
+
+    if wen_value == 1 and not int(full):
+        queue.append(din_value)
+
+    await RisingEdge(clk)
+
+    # must assign wen.value to 0 1 cycle later
+    wen.value = 0
+
+    ren_value = random.randint(0,1)
+    ren.value = ren_value
+
+    cocotb.log.debug("ren.value = %d" % ren_value)
+
+    #await 1 clock cycle and we will see valid data
+    await RisingEdge(clk)
+    ren.value = 0
+
+    if ren.value == 1 and queue:
+        dout_check = queue.popleft()
+        await RisingEdge(clk)
+        cocotb.log.debug("dout.value = %d" % dout.value)
+        cocotb.log.debug("dout_check = %d" % dout_check)
+        assert int(dout.value) == dout_check, (
+         f"dout.value != dout_check: {int(dout.value)} != {dout_check}"
+            )
+    elif queue:
+        cocotb.log.info("Queue contains data - did not issue a read")
+    else:
+        cocotb.log.info("Queue is empty - nothing to read")
+
 
 
 @cocotb.test()
@@ -64,5 +83,5 @@ async def syncfifo_basic_test(dut):
     await reset_thread
     cocotb.log.debug("After Reset")
 
-    for _ in range(10):
-        await write_and_read(dut.din, dut.wen, dut.ren, dut.dout, int(dut.WIDTH), period, dut.clk, int(dut.DEPTH))
+    for _ in range(1000):
+        await write_and_read(dut.din, dut.wen, dut.ren, dut.dout, int(dut.WIDTH.value), period, dut.clk, int(dut.DEPTH.value), dut.full)
